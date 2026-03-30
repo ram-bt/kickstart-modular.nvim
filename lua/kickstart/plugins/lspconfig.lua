@@ -198,6 +198,21 @@ return {
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
       local capabilities = require('blink.cmp').get_lsp_capabilities()
 
+      local esp32 = require 'esp32'
+
+      local function is_esp_project()
+        return vim.fn.filereadable 'sdkconfig' == 1 or vim.fn.getenv 'IDF_PATH' ~= ''
+      end
+
+      local clang_config = is_esp_project() and esp32.lsp_config() or {}
+      clang_config.capabilities = capabilities
+
+      if is_esp_project() then
+        vim.notify('Using ESP32 LSP (esp-clangd)', vim.log.levels.INFO)
+      else
+        vim.notify('Using default clang LSP', vim.log.levels.INFO)
+      end
+
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
@@ -208,8 +223,9 @@ return {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        clangd = {},
-        gopls = {},
+        -- clangd = {},
+        -- arduino_language_server = {},
+        -- gopls = {},
         pyright = {},
         rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -250,7 +266,9 @@ return {
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      local ensure_installed = vim.tbl_filter(function(s)
+        return s ~= 'clangd'
+      end, vim.tbl_keys(servers or {}))
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
@@ -270,6 +288,8 @@ return {
           end,
         },
       }
+      vim.lsp.config('clangd', clang_config)
+      vim.lsp.enable 'clangd'
     end,
   },
 }
