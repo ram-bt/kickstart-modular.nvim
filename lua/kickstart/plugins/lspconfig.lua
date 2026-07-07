@@ -123,9 +123,10 @@ return {
       ---@type table<string, vim.lsp.Config>
       local servers = {
         -- clangd = {},
+        clangd = require('esp32').lsp_config(),
         -- arduino_language_server = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
